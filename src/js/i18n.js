@@ -74,12 +74,20 @@ window.I18N = (function () {
 
     // Columnas: es, en, pt, fr, de, it, ja, ko, zh
     var ROWS = {
+        "opt.saverStyle": ["Estilo del protector", "Screen saver style", "Estilo da proteção", "Style de l’économiseur", "Bildschirmschoner-Stil", "Stile del salvaschermo", "スクリーンセーバーの種類", "화면 보호기 스타일", "屏保样式"],
+        "saverStyle.images": ["Imágenes", "Images", "Imagens", "Images", "Bilder", "Immagini", "画像", "이미지", "图片"],
+        "saverStyle.aerial": ["Vídeo aéreo", "Aerial video", "Vídeo aéreo", "Vidéo aérienne", "Luftaufnahmen", "Video aereo", "空撮動画", "항공 영상", "航拍视频"],
+        "exit.title": ["¿Salir de Lumen?", "Exit Lumen?", "Sair do Lumen?", "Quitter Lumen ?", "Lumen verlassen?", "Uscire da Lumen?", "Lumenを終了しますか？", "Lumen을 종료할까요?", "退出 Lumen？"],
+        "exit.stay": ["Seguir en Lumen", "Stay in Lumen", "Ficar no Lumen", "Rester dans Lumen", "In Lumen bleiben", "Resta in Lumen", "Lumenを使い続ける", "Lumen에 머무르기", "留在 Lumen"],
+        "exit.confirm": ["Salir de Lumen", "Exit Lumen", "Sair do Lumen", "Quitter Lumen", "Lumen verlassen", "Esci da Lumen", "Lumenを終了", "Lumen 종료", "退出 Lumen"],
+        "exit.unavailable": ["No se pudo salir. En el TV, mantén Atrás para salir.", "Could not exit. On the TV, hold Return to exit.", "Não foi possível sair. Na TV, segure Voltar para sair.", "Impossible de quitter. Sur le téléviseur, maintenez Retour.", "Beenden nicht möglich. Am TV Zurück gedrückt halten.", "Uscita non riuscita. Sul TV, tieni premuto Indietro.", "終了できません。テレビでは戻るを長押ししてください。", "종료할 수 없어요. TV에서 뒤로 버튼을 길게 누르세요.", "无法退出。在电视上长按返回键退出。"],
+
 
         'tile.library': ['Todas las apps', 'All Apps', 'Todos os apps', 'Toutes les apps', 'Alle Apps', 'Tutte le app', 'すべてのアプリ', '모든 앱', '所有应用'],
         'tile.manage': ['Administrar apps', 'Manage Apps', 'Gerenciar apps', 'Gérer les apps', 'Apps verwalten', 'Gestisci app', 'アプリを管理', '앱 관리', '管理应用'],
         'tile.saver': ['Protector de pantalla', 'Screen Saver', 'Proteção de tela', 'Économiseur d’écran', 'Bildschirmschoner', 'Salvaschermo', 'スクリーンセーバー', '화면 보호기', '屏幕保护程序'],
         'hero.saver.e': ['Ambiente', 'Ambient', 'Ambiente', 'Ambiance', 'Ambiente', 'Ambiente', 'アンビエント', '앰비언트', '氛围'],
-        'hero.saver.b': ['Imágenes de tus plataformas con la hora, como un cuadro. Cualquier tecla vuelve a Inicio.', 'Images from your services with the time, like a picture frame. Any key returns Home.', 'Imagens das suas plataformas com a hora, como um quadro. Qualquer tecla volta ao Início.', 'Images de vos services avec l’heure, comme un tableau. Une touche pour revenir à l’accueil.', 'Bilder deiner Dienste mit Uhrzeit, wie ein Bilderrahmen. Jede Taste führt zurück.', 'Immagini dei tuoi servizi con l’ora, come un quadro. Qualsiasi tasto torna alla Home.', 'サービスの画像と時刻を額縁のように表示。いずれかのキーでホームへ。', '서비스 이미지와 시간을 액자처럼 보여줘요. 아무 키나 누르면 홈으로.', '像相框一样显示你的服务图片和时间。按任意键返回主屏幕。'],
+        'hero.saver.b': ["Imágenes o vídeos aéreos con la hora. Atrás vuelve a la cuadrícula.", "Images or aerial videos with the time. Back returns to the app grid.", "Imagens ou vídeos aéreos com a hora. Voltar retorna à grade de apps.", "Images ou vidéos aériennes avec l’heure. Retour affiche la grille d’apps.", "Bilder oder Luftaufnahmen mit Uhrzeit. Zurück öffnet das App-Raster.", "Immagini o video aerei con l’ora. Indietro torna alla griglia delle app.", "画像や空撮動画と時計を表示。戻るでアプリ一覧へ。", "이미지 또는 항공 영상과 시계를 표시해요. 뒤로 버튼으로 앱 그리드로 돌아가요.", "显示图片或航拍视频和时间。按返回键回到应用网格。"],
         'tile.settings': ['Ajustes', 'Settings', 'Ajustes', 'Réglages', 'Einstellungen', 'Impostazioni', '設定', '설정', '设置'],
 
         'hero.library.e': ['Biblioteca', 'Library', 'Biblioteca', 'Bibliothèque', 'Mediathek', 'Libreria', 'ライブラリ', '보관함', '资料库'],

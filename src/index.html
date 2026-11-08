@@ -74,11 +74,18 @@
     <div class="saver" id="saver">
         <div class="saver-img"></div>
         <div class="saver-img"></div>
+        <div class="saver-video-host" id="saver-video-host"></div>
         <div class="saver-shade"></div>
         <div class="saver-boost info"></div>
         <div class="saver-boost clock"></div>
         <div class="saver-clock"><div id="saver-time"></div><div id="saver-date"></div></div>
         <div class="saver-info" id="saver-info"><div class="eyebrow"></div><div class="title"></div><p class="blurb"></p></div>
+    </div>
+    <div class="exit-dialog" id="exit-dialog" role="dialog" aria-modal="true" aria-labelledby="exit-title" aria-hidden="true">
+        <div class="exit-card">
+            <h2 id="exit-title"></h2>
+            <div class="exit-actions"><button id="exit-stay" type="button"></button><button id="exit-confirm" type="button"></button></div>
+        </div>
     </div>
 </div>
 
@@ -91,6 +98,7 @@
 <script src="js/tmdb.js"></script>
 <script src="js/platform.js"></script>
 <script src="js/aurora.js"></script>
+<script src="js/aerial.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

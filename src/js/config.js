@@ -12,6 +12,11 @@ window.GLASS_CONFIG = {
     // Minutos de inactividad antes del protector de pantalla (0 = nunca). Editable en Ajustes.
     screensaverMinutes: 5,
 
+    // Packaged 1080p H.264 MP4, WITHOUT audio (upscaled from the owner's 720p clip).
+    // HTTPS URLs also work; add their exact media/CDN origins to config.xml first.
+    // Images remains the default style; this clip is loaded only on Aerial entry.
+    aerial: { urls: ['media/aerial-coast.mp4'], startupMs: 8000, stallMs: 5000 },
+
     // Títulos populares de TMDB para el Top Shelf. La clave NO va aquí: va en js/config.local.js
     // (ver config.local.example.js), que no se sube a git. El país y el idioma salen del TV;
     // estos valores solo se usan si el TV no los reporta.

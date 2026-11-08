@@ -131,6 +131,27 @@
         try { tizen.application.getCurrentApplication().hide(); } catch (e) { /* navegador */ }
     }
 
+    function exit() {
+        if (!isTV) return false;
+        try { tizen.application.getCurrentApplication().exit(); return true; }
+        catch (e) { console.error(e); return false; }
+    }
+
+    // Keep native protection enabled except while our aerial is actually playing.
+    // A late OFF callback must not undo a more recent ON request after hide/exit.
+    var nativeSaverWanted = true, nativeSaverRevision = 0;
+    function setNativeSaver(enabled) {
+        nativeSaverWanted = enabled;
+        var revision = ++nativeSaverRevision;
+        if (!isTV || !window.webapis || !webapis.appcommon) return;
+        try {
+            var api = webapis.appcommon, states = api.AppCommonScreenSaverState;
+            api.setScreenSaver(enabled ? states.SCREEN_SAVER_ON : states.SCREEN_SAVER_OFF, function () {
+                if (revision !== nativeSaverRevision && nativeSaverWanted) setNativeSaver(true);
+            }, function (error) { console.warn('Native screensaver:', error); });
+        } catch (e) { console.warn('Native screensaver unavailable:', e); }
+    }
+
     function registerKeys() {
         if (!isTV || !tizen.tvinputdevice) return;
         ['ColorF0Red', 'ColorF1Green', 'ColorF2Yellow', 'ColorF3Blue', 'Info'].forEach(function (k) {
@@ -180,6 +201,8 @@
         hdmiSources: hdmiSources,
         openHdmi: openHdmi,
         hide: hide,
+        exit: exit,
+        setNativeSaver: setNativeSaver,
         registerKeys: registerKeys,
         deviceInfo: deviceInfo,
         locale: locale

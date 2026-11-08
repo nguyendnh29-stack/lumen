@@ -330,3 +330,10 @@ example apps. Press **S** to open the screen saver.
 ## Licencia · License
 
 [MIT](LICENSE)
+
+
+## Local customization review (Q80T / Tizen 5.5)
+
+This local variant adds an optional single-player aerial screensaver and application-local Back navigation with an exit confirmation. Images remain the default. Native long-press Return/Exit and Samsung Home handling remain under platform control.
+
+The owner’s 27-second Pixabay coastline clip is bundled for offline playback. Its 720p source was upscaled to a silent, fast-start 1080p H.264 MP4 (about 13.3 MiB). Choose Aerial video in Settings to enable it; Images remains the default and automatic failure fallback. No new network origins or privileges are required. Media provenance and conversion details are in [src/media/SOURCES.md](src/media/SOURCES.md). See [the review, limitations, configuration and testing notes](docs/customization-review.md) before making any TV deployment. The changes have only been tested locally.

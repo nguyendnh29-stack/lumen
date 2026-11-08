@@ -23,11 +23,12 @@
 
     var PREFS_KEY = 'glass.prefs.v1';
     var prefs = (function () {
-        var d = { pinned: null, hidden: [], showHidden: false, lang: 'auto', speed: 'normal', tray: 'glass', shelf: 'images', saverClock: 'high', wallpaper: 'dynamic', clock24: false, saverMin: CFG.screensaverMinutes, showInputs: true, hdmiNames: {} };
+        var d = { pinned: null, hidden: [], showHidden: false, lang: 'auto', speed: 'normal', tray: 'glass', shelf: 'images', saverStyle: 'images', saverClock: 'high', wallpaper: 'dynamic', clock24: false, saverMin: CFG.screensaverMinutes, showInputs: true, hdmiNames: {} };
         try {
             var s = JSON.parse(localStorage.getItem(PREFS_KEY) || '{}');
             Object.keys(s).forEach(function (k) { d[k] = s[k]; });
         } catch (e) { /* almacenamiento no disponible */ }
+        if (d.saverStyle !== 'aerial') d.saverStyle = 'images';
         return d;
     })();
 
@@ -634,6 +635,7 @@
 
     function launchItem(item, tileEl) {
         if (launching) return;
+        Aerial.stop();
         launching = true;
         var veil = $('veil');
         var r = tileEl.getBoundingClientRect(), s = stage.getBoundingClientRect();
@@ -856,6 +858,11 @@
                 }
             },
             {
+                label: t('opt.saverStyle'),
+                value: function () { return t('saverStyle.' + prefs.saverStyle); },
+                change: function () { prefs.saverStyle = prefs.saverStyle === 'aerial' ? 'images' : 'aerial'; }
+            },
+            {
                 // Opacidad de la hora del protector: más baja deja ver el fondo, que cambia.
                 label: t('opt.saverClock'),
                 value: function () { return t('level.' + prefs.saverClock); },
@@ -1006,6 +1013,9 @@
         $('edit-hint').innerHTML = '<span><b>' + esc(t('edit.arrows')) + '</b> ' + esc(t('edit.move')) + '</span>' +
             '<span><b>' + esc(t('edit.hold')) + '</b> ' + esc(t('edit.hide')) + '</span>' +
             '<span><b>OK</b> ' + esc(t('edit.done')) + '</span>';
+        $('exit-title').textContent = t('exit.title');
+        $('exit-stay').textContent = t('exit.stay');
+        $('exit-confirm').textContent = t('exit.confirm');
     }
 
     // Cambia todos los textos al idioma elegido y pide a TMDB los títulos en ese idioma.
@@ -1080,7 +1090,7 @@
 
     // Muestra las imágenes de los títulos destacados de todas las plataformas, una tras otra con
     // un fundido lento, sin movimiento. Solo hay dos capas: la visible y la siguiente.
-    var saver = { list: [], i: 0, flip: false, timer: null };
+    var saver = { list: [], i: 0, flip: false, timer: null, textTimer: null, token: 0 };
 
     function saverList() {
         var out = [], data = window.FEATURED || {};
@@ -1095,6 +1105,7 @@
     }
 
     function saverShow(item, set) {
+        var token = saver.token;
         var lum = set && set.lum;
         setLevel($('saver'), 'info', lum ? lum.info : 0);
         setLevel($('saver'), 'clock', lum ? lum.clock : 0);
@@ -1103,13 +1114,16 @@
         saver.flip = !saver.flip;
         next.style.backgroundImage = 'url(' + item.img + ')';
         requestAnimationFrame(function () {
+            if (token !== saver.token || state.screen !== 'saver' || document.hidden) return;
             next.classList.add('on');
             prev.classList.remove('on');
         });
         // El texto se funde junto con la imagen: sale, cambia y vuelve a entrar.
         var info = $('saver-info');
         info.classList.add('hide');
-        setTimeout(function () {
+        clearTimeout(saver.textTimer);
+        saver.textTimer = setTimeout(function () {
+            if (token !== saver.token || state.screen !== 'saver' || document.hidden) return;
             info.querySelector('.eyebrow').textContent = item.from ? I18N.t('shelf.popular', { app: item.from }) : '';
             info.querySelector('.title').textContent = item.title || '';
             info.querySelector('.blurb').textContent = [item.meta, item.blurb].filter(Boolean).join(' · ');
@@ -1118,7 +1132,8 @@
     }
 
     function saverNext() {
-        if (state.screen !== 'saver') return;
+        if (state.screen !== 'saver' || document.hidden || !saver.list.length) return;
+        var token = saver.token;
         saver.i++;
         if (saver.i >= saver.list.length) {
             // Vuelta completa: barajar de nuevo, sin repetir seguido el último que se vio.
@@ -1127,10 +1142,11 @@
             if (saver.list.length > 1 && saver.list[0].img === last.img) saver.list.push(saver.list.shift());
             saver.i = 0;
         }
+        if (!saver.list.length) return;
         var item = saver.list[saver.i];
         // fromImage además de cargarla mide su brillo (para el contraste de la hora y el texto).
         Aurora.fromImage('f:' + item.img, item.img).then(function (set) {
-            if (state.screen !== 'saver') return;
+            if (token !== saver.token || state.screen !== 'saver' || document.hidden) return;
             saverShow(item, set);
             // Precarga la siguiente mientras se ve esta.
             var nextItem = saver.list[(saver.i + 1) % saver.list.length];
@@ -1152,11 +1168,30 @@
     }
 
     function openSaver() {
+        if (state.screen === 'saver' || state.screen === 'exit' || document.hidden || launching) return;
+        saver.token++;
+        resetInput();
         applySaverClock();
         state.prevScreen = state.screen;
         state.screen = 'saver';
-        saver.list = saverList();
         $('saver').classList.add('on');
+        if (prefs.saverStyle === 'aerial') {
+            $('saver').classList.add('aerial');
+            var set = imgs[stage.classList.contains('flip') ? 'b' : 'a'];
+            if (set) saverShow({ img: set.sharp, title: '', from: '' });
+            var token = saver.token;
+            Aerial.start($('saver-video-host'), CFG.aerial, function () {
+                if (token !== saver.token || state.screen !== 'saver' || document.hidden) return;
+                saver.token++;
+                clearTimeout(saver.textTimer);
+                $('saver').classList.remove('aerial');
+                startImageSaver();
+            });
+        } else startImageSaver();
+    }
+
+    function startImageSaver() {
+        saver.list = saverList();
         if (!saver.list.length) {
             var set = imgs[stage.classList.contains('flip') ? 'b' : 'a'];
             if (set) saverShow({ img: set.sharp, title: '', from: '' });
@@ -1166,14 +1201,32 @@
         saverNext();
     }
 
-    function closeSaver() {
+    function closeSaver(toGrid) {
+        if (state.screen !== 'saver') { Aerial.stop(); return; }
+        saver.token++;
         clearTimeout(saver.timer);
-        $('saver').classList.remove('on');
+        clearTimeout(saver.textTimer);
+        Aerial.stop();
+        $('saver').classList.remove('on', 'aerial');
+        document.querySelectorAll('.saver-img').forEach(function (layer) {
+            layer.classList.remove('on');
+            layer.style.backgroundImage = '';
+        });
         state.screen = state.prevScreen || 'home';
+        state.prevScreen = null;
+        lastInput = Date.now();
+        if (toGrid) {
+            $('library').classList.remove('open');
+            $('panel').classList.remove('open', 'about-open');
+            state.about = false;
+            state.screen = 'home';
+            if (state.editing) exitEdit();
+            focusGrid();
+        }
     }
 
     setInterval(function () {
-        if (state.screen === 'saver' || !prefs.saverMin || document.hidden || launching) return;
+        if (state.screen === 'saver' || state.screen === 'exit' || !prefs.saverMin || document.hidden || launching) return;
         if (Date.now() - lastInput > prefs.saverMin * 60000) openSaver();
     }, 10000);
 
@@ -1181,19 +1234,53 @@
 
     var lastMove = 0, held = {};
     var enterDown = false, enterLong = false, enterTimer = null;
+    var consumed = {};
+
+    function resetInput() {
+        clearTimeout(enterTimer);
+        enterDown = false;
+        enterLong = false;
+        held = {};
+        consumed = {};
+    }
+
+    function isSystemKey(e) {
+        // Never register or cancel Exit (including long Return), Home or Power.
+        return e.keyCode === 10182 || e.key === 'Exit' || e.key === 'XF86Exit' || e.key === 'Home' || e.key === 'Power';
+    }
+
+    function isAppKey(k) {
+        return (k >= 37 && k <= 40) || k === KEY.ENTER || isBack(k) ||
+            (k >= KEY.RED && k <= KEY.BLUE) || k === KEY.INFO || (k === 83 && !Platform.isTV);
+    }
+
+    function consume(e) { e.preventDefault(); e.stopPropagation(); }
 
     function isBack(k) { return k === KEY.BACK || k === KEY.ESC || k === KEY.BACKSPACE; }
 
     function onKey(e) {
         var k = e.keyCode;
+        if (isSystemKey(e) || document.hidden || !isAppKey(k)) return;
         lastInput = Date.now();
 
+        if (consumed[k]) { consume(e); return; }
+
         if (state.screen === 'saver') {
-            e.preventDefault();
-            if (k !== KEY.ENTER || !enterDown) closeSaver();
+            consume(e);
+            closeSaver(isBack(k));
+            resetInput();
+            consumed[k] = true;
             return;
         }
         if (launching) { e.preventDefault(); return; }
+
+        if (isBack(k)) {
+            consume(e);
+            resetInput();
+            consumed[k] = true;
+            back();
+            return;
+        }
 
         if (k === KEY.ENTER) {
             e.preventDefault();
@@ -1216,14 +1303,19 @@
             move(k === KEY.LEFT ? 'l' : k === KEY.RIGHT ? 'r' : k === KEY.UP ? 'u' : 'd');
             return;
         }
-        if (isBack(k)) { e.preventDefault(); back(); return; }
         if (k === KEY.GREEN && state.screen === 'home') openLibrary();
         // Solo en la vista previa web: S abre el protector de pantalla para probarlo.
-        if (k === 83 && !Platform.isTV) openSaver();
+        if (k === 83 && !Platform.isTV) { openSaver(); consumed[k] = true; }
         if ((k === KEY.BLUE || k === KEY.INFO) && state.screen === 'home') openPanel();
     }
 
     function onKeyUp(e) {
+        if (isSystemKey(e) || document.hidden) return;
+        if (consumed[e.keyCode]) {
+            consume(e);
+            delete consumed[e.keyCode];
+            return;
+        }
         held[e.keyCode] = false;
         if (e.keyCode !== KEY.ENTER) return;
         e.preventDefault();
@@ -1235,6 +1327,11 @@
 
     function move(dir) {
         var h = dir === 'l' || dir === 'r', delta = dir === 'r' || dir === 'd' ? 1 : -1;
+
+        if (state.screen === 'exit') {
+            if (h) (dir === 'r' ? $('exit-confirm') : $('exit-stay')).focus();
+            return;
+        }
 
         if (state.screen === 'home') {
             var step = h ? delta : delta * COLS;
@@ -1273,6 +1370,11 @@
     }
 
     function select() {
+        if (state.screen === 'exit') {
+            if (document.activeElement === $('exit-confirm')) confirmExit();
+            else closeExit();
+            return;
+        }
         if (state.screen === 'home') {
             if (state.editing) return exitEdit();
             var it = gridItems[state.ai];
@@ -1297,12 +1399,36 @@
     }
 
     function back() {
+        if (state.screen === 'exit') return closeExit();
         if (state.screen === 'library') return closeLibrary();
         if (state.screen === 'panel') return state.about ? closeAbout() : closePanel();
         if (state.editing) return exitEdit();
-        // Atrás en la cuadrícula vuelve arriba, como en tvOS.
-        if (state.ai > 0) { state.ai = 0; return focusGrid('u'); }
-        // En Inicio no hay a dónde volver: el botón Home del control lleva al Smart Hub.
+        openExit();
+    }
+
+    function openExit() {
+        state.screen = 'exit';
+        $('exit-dialog').classList.add('open');
+        $('exit-dialog').setAttribute('aria-hidden', 'false');
+        $('exit-stay').focus();
+    }
+
+    function closeExit() {
+        $('exit-dialog').classList.remove('open');
+        $('exit-dialog').setAttribute('aria-hidden', 'true');
+        if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+        state.screen = 'home';
+        focusGrid();
+    }
+
+    function confirmExit() {
+        resetInput();
+        Aerial.stop();
+        savePrefs();
+        if (!Platform.exit()) {
+            closeExit();
+            toast(I18N.t('exit.unavailable'));
+        }
     }
 
     // ---------------------------------------------------------------- Arranque
@@ -1335,8 +1461,12 @@
         makeGlass($('shelf'));
         startClock();
         Platform.registerKeys();
-        document.addEventListener('keydown', onKey);
-        document.addEventListener('keyup', onKeyUp);
+        document.addEventListener('keydown', onKey, true);
+        document.addEventListener('keyup', onKeyUp, true);
+        $('exit-stay').addEventListener('click', closeExit);
+        $('exit-confirm').addEventListener('click', confirmExit);
+        window.addEventListener('blur', resetInput);
+        window.addEventListener('pagehide', function () { resetInput(); closeSaver(); });
 
         // Primer fondo pintado directo (sin fundido ni espera) para no arrancar en negro mientras
         // carga la primera foto del Top Shelf.
@@ -1358,7 +1488,12 @@
 
         // Al volver de otra app: quitar el velo y refrescar por si se instaló algo.
         document.addEventListener('visibilitychange', function () {
-            if (document.hidden) return;
+            resetInput();
+            if (document.hidden) {
+                closeSaver();
+                if (state.screen === 'exit') closeExit();
+                return;
+            }
             hideVeil();
             lastInput = Date.now();
             loadApps().then(renderGrid);

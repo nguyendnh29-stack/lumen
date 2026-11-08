@@ -838,3 +838,30 @@ h1, h2, p { margin: 0; font-weight: inherit; }
 .toast, .edit-hint { z-index: 7; }
 .veil { z-index: 8; }
 .saver { z-index: 10; }
+
+/* A single video surface. Keep the image backdrop visible until playback starts. */
+.saver-video-host, .saver-video {
+    position: absolute; left: 0; top: 0; width: 1920px; height: 1080px;
+    pointer-events: none;
+}
+.saver-video-host { opacity: 0; }
+.saver-video-host.playing { opacity: 1; }
+.saver-video { object-fit: cover; background: #000; }
+.saver.aerial .saver-info, .saver.aerial .saver-boost { display: none; }
+/* Video resources are released immediately, independently of presentation. */
+.saver:not(.on) { transition: none; }
+
+.exit-dialog {
+    display: none; position: absolute; left: 0; top: 0; width: 1920px; height: 1080px;
+    z-index: 11; background: rgba(0, 0, 0, 0.72); align-items: center; justify-content: center;
+}
+.exit-dialog.open { display: flex; }
+.exit-card { width: 740px; padding: 60px; border-radius: 28px; background: #20242d; text-align: center; }
+.exit-card h2 { font-size: 40px; font-weight: 600; margin-bottom: 44px; }
+.exit-actions { display: flex; }
+.exit-actions button {
+    flex: 1; padding: 22px 16px; border: 3px solid transparent; border-radius: 14px;
+    background: #363c49; color: #fff; font: inherit; font-size: 28px;
+}
+.exit-actions button + button { margin-left: 24px; }
+.exit-actions button:focus { outline: none; border-color: #fff; background: #505c73; }
